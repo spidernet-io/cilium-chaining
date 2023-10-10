@@ -12,20 +12,21 @@ on:
 
 permissions: write-all
 
-call-workflow:
-  uses: ./.github/workflows/call-image-build.yaml
-  if: ${{ github.event_name = 'push' }}
-  with:
-    ref: ${{ github.ref }}
-    tag: latest
-    push: true
-  secrets: inherit
+jobs:
+  call-workflow:
+    uses: ./.github/workflows/call-image-build.yaml
+    if: ${{ github.event_name = 'push' }}
+    with:
+      ref: ${{ github.ref }}
+      tag: latest
+      push: true
+    secrets: inherit
 
-call-workflow:
-  uses: ./.github/workflows/call-image-build.yaml
-  if: ${{ github.event_name == 'pull_request' }}
-  with:
-    ref: ${{ github.ref }}
-    tag: ${{ github.event.pull_request.head.sha }}
-    push: false
-  secrets: inherit
+  call-workflow:
+    uses: ./.github/workflows/call-image-build.yaml
+    if: ${{ github.event_name == 'pull_request' }}
+    with:
+      ref: ${{ github.ref }}
+      tag: ${{ github.event.pull_request.head.sha }}
+      push: false
+    secrets: inherit

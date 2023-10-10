@@ -7,11 +7,12 @@ on:
 
 permissions: write-all
 
-call-workflow:
-  uses: ./.github/workflows/call-image-build.yaml
-  with:
-    ref: ${{ github.ref }}
-    tag: ${{ github.ref }}
-    push: true
-  secrets: inherit
+jobs:
+  call-workflow:
+    uses: ./.github/workflows/call-image-build.yaml
+    with:
+      ref: ${{ github.ref }}
+      tag: ${{ github.ref }}
+      push: true
+    secrets: inherit
 
