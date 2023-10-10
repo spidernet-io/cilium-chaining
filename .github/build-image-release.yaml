@@ -1,0 +1,17 @@
+name: Auto Build Release Image
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+
+permissions: write-all
+
+call-workflow:
+  uses: ./.github/workflows/call-image-build.yaml
+  with:
+    ref: ${{ github.ref }}
+    tag: ${{ github.ref }}
+    push: true
+  secrets: inherit
+
