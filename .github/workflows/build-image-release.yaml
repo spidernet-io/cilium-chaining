@@ -8,7 +8,7 @@ on:
 permissions: write-all
 
 jobs:
-  call-workflow:
+  call-build-release:
     uses: ./.github/workflows/call-image-build.yaml
     with:
       ref: ${{ github.ref }}
