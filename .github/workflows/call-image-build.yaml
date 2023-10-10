@@ -69,7 +69,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           github-token: ${{ secrets.GITHUB_TOKEN }}
           tags: |
-            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}/cilium-chaining:${{ inputs.tag }}
+            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}:${{ inputs.tag }}
           build-args: |
             GIT_COMMIT_VERSION=${{ steps.arg.outputs.commit_version }}
             GIT_COMMIT_TIME=${{ steps.arg.outputs.commit_time }}

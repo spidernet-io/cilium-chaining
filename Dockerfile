@@ -15,8 +15,8 @@ ENV GIT_COMMIT=67190636f1d5a7a443ea0bda585b215e7650dd25
 RUN git clone -b $GIT_TAG --depth 1 https://github.com/cilium/cilium.git && \
     cd cilium && \
     [ "`git rev-parse HEAD`" = "${GIT_COMMIT}" ]
-COPY policy/cilium /cilium_patch
-RUN cd cilium && git apply /cilium_patch/*.patch
+COPY patches /patches
+RUN cd cilium && git apply /patches/*.patch
 ARG NOSTRIP
 ARG LOCKDEBUG
 ARG V
