@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cilium-chaining-binding
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium-chaining
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "cilium-chaining.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}

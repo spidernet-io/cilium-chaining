@@ -1,0 +1,264 @@
+---
+# Source: cilium-chaining/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium-chaining
+  namespace:  kube-system
+---
+# Source: cilium-chaining/templates/clusterrole.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cilium-chaining
+  namespace: kube-system
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods", "nodes", "namespaces", "configmaps", "serviceaccounts" ]
+    verbs: [ "get", "watch", "list", "update" ]
+  - apiGroups: [ "" ]
+    resources:
+      - events
+    verbs:
+      - create
+  - apiGroups: [ "networking.k8s.io" ]
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "coordination.k8s.io" ]
+    resources: [ "leases" ]
+    verbs: [ "get", "watch", "update", "create" ]
+  - apiGroups: [ "extensions" ]
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "" ]
+    resources:
+      - pods/status
+    verbs:
+      - update
+  - apiGroups: [ "discovery.k8s.io" ]
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "" ]
+    resources:
+      - endpoints
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "" ]
+    resources:
+      - nodes
+      - nodes/status
+    verbs:
+      - patch
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+  - apiGroups:
+      - cilium.io
+    resources:
+      - '*'
+    verbs:
+      - '*'
+---
+# Source: cilium-chaining/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cilium-chaining-binding
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium-chaining
+subjects:
+  - kind: ServiceAccount
+    name: cilium-chaining
+    namespace: kube-system
+---
+# Source: cilium-chaining/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cilium-chaining
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cilium-chaining
+      app.kubernetes.io/instance: cilium-chaining
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cilium-chaining
+        app.kubernetes.io/instance: cilium-chaining
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    Values:
+                      - linux
+              # Compatible with Kubernetes 1.12.x and 1.13.x
+              - matchExpressions:
+                  - key: beta.kubernetes.io/os
+                    operator: In
+                    Values:
+                      - linux
+      containers:
+      - command:
+        - /bin/init.sh
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CILIUM_K8S_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: CILIUM_CNI_CHAINING_MODE
+          value: "spidernet"
+        - name: IN_CLUSTER_LOADBALANCE
+          value: "true"
+        - name: POLICY_ENFORCEMENT
+          value: "default"
+        - name: KUBE_PROXY_REPLACEMENT
+          value: "partial"
+        - name: ENABLE_HUBBLE
+          value: "false"
+        - name: HUBBLE_LISTEN_ADDRESS
+          value: ":4244"
+        - name: HUBBLE_LISTEN_ADDRESS
+          value: ":4244"
+        - name: HUBBLE_METRICS_SERVER
+          value: ":9091"
+        - name: HUBBLE_METRICS
+          value: ":9091"
+        image: ghcr.io/spidernet-io/cilium-chaining:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 6
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            host: localhost
+            port: 9099
+          timeoutSeconds: 1
+        name: cilium-chaining
+        readinessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            host: localhost
+            port: 9099
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+          requests:
+            cpu: 250m
+            memory: 300Mi
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /opt/cni/bin
+          name: cni-bin
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /host
+          name: host-root
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /etc/cni/net.d
+          name: cni
+          readOnly: true
+        - mountPath: /sys/fs
+          name: sys-fs
+        - mountPath: /var/run/cilium
+          name: cilium-run
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+      hostNetwork: true
+      serviceAccountName: cilium-chaining
+      hostPID: true
+      volumes:
+      - hostPath:
+          path: /opt/cni/bin
+          type: Directory
+        name: cni-bin
+      - hostPath:
+          path: /etc/cni/net.d
+          type: ""
+        name: cni
+      - hostPath:
+          path: /var/run/
+          type: Directory
+        name: eni-run
+      - hostPath:
+          path: /lib/modules
+          type: ""
+        name: lib-modules
+      - hostPath:
+          path: /var/lib/cni/networks
+          type: ""
+        name: cni-networks
+      - hostPath:
+          path: /
+          type: Directory
+        name: host-root
+      - name: addon-token
+        secret:
+          defaultMode: 420
+          items:
+          - key: addon.token.config
+            path: token-config
+          optional: true
+          secretName: addon.network.token
+      # cilium
+      - hostPath:
+          path: /var/run/cilium
+          type: DirectoryOrCreate
+        name: cilium-run
+      # cilium
+      - hostPath:
+          path: /sys/fs/
+          type: DirectoryOrCreate
+        name: sys-fs
+      - hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+        name: xtables-lock

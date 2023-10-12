@@ -1,0 +1,73 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cilium-chaining
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "pods", "nodes", "namespaces", "configmaps", "serviceaccounts" ]
+    verbs: [ "get", "watch", "list", "update" ]
+  - apiGroups: [ "" ]
+    resources:
+      - events
+    verbs:
+      - create
+  - apiGroups: [ "networking.k8s.io" ]
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "coordination.k8s.io" ]
+    resources: [ "leases" ]
+    verbs: [ "get", "watch", "update", "create" ]
+  - apiGroups: [ "extensions" ]
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "" ]
+    resources:
+      - pods/status
+    verbs:
+      - update
+  - apiGroups: [ "discovery.k8s.io" ]
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "" ]
+    resources:
+      - endpoints
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [ "" ]
+    resources:
+      - nodes
+      - nodes/status
+    verbs:
+      - patch
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+  - apiGroups:
+      - cilium.io
+    resources:
+      - '*'
+    verbs:
+      - '*'

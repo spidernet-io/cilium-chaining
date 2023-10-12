@@ -33,5 +33,5 @@ RUN cd /go/src/github.com/cilium/cilium/operator && make cilium-operator-generic
     && mv cilium-operator-generic /tmp/install/usr/bin/
 
 FROM scratch
-COPY --from=cilium-builder /tmp/install/usr/bin/* /usr/local/bin
-COPY init.sh /usr/local/bin
+COPY --from=cilium-builder /tmp/install/ /bin
+COPY init.sh /bin

@@ -18,6 +18,9 @@ on:
       push:
         required: false
         type: boolean
+      ci:
+        required: false
+        type: boolean
 
 permissions: write-all
 
@@ -56,6 +59,7 @@ jobs:
       # build normal image
       - name: Image Build
         uses: docker/build-push-action@v5.0.0
+        if: ${{ inputs.ci != true }}
         continue-on-error: false
         id: docker_build_master
         with:
@@ -73,3 +77,35 @@ jobs:
           build-args: |
             GIT_COMMIT_VERSION=${{ steps.arg.outputs.commit_version }}
             GIT_COMMIT_TIME=${{ steps.arg.outputs.commit_time }}
+
+      # ==========CI image build
+      # build CI image
+      - name: CI Image Build
+        if: ${{ inputs.ci == true }}
+        uses: docker/build-push-action@v5.0.0
+        continue-on-error: false
+        id: docker_build_pr
+        with:
+          context: .
+          file: ./Dockerfile
+          # Only push when the event name was a GitHub push, this is to avoid
+          # re-pushing the image tags when we only want to re-create the Golang
+          # docker cache after the workflow "Image CI Cache Cleaner" was terminated.
+          push: false
+          provenance: false
+          platforms: linux/amd64
+          type: docker,dest=/tmp/image.tar
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tags: |
+            ${{ env.ONLINE_REGISTER }}/${{ github.repository }}:${{ inputs.tag }}
+          build-args: |
+            GIT_COMMIT_VERSION=${{ steps.arg.outputs.commit_version }}
+            GIT_COMMIT_TIME=${{ steps.arg.outputs.commit_time }}
+
+      - name: Upload artifact e2e image tar
+        if: ${{ inputs.ci == true }}
+        uses: actions/upload-artifact@v3.1.3
+        with:
+          name: image-e2e-tar
+          path: /tmp/images.tar
+          retention-days: 1

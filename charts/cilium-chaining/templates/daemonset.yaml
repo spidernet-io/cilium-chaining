@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "cilium-chaining.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "cilium-chaining.labels" . | nindent 4 }}
+  {{- if .Values.global.labels }}
+  {{- include "tplValues.render" ( dict "value" .Values.global.labels "context" $ ) | nindent 4 }}
+  {{- end }}
+  {{- if .Values.global.annotations }}
+  annotations:
+    {{- include "tplValues.render" ( dict "value" .Values.global.annotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "cilium-chaining.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- if .Values.cilium.labels }}
+        {{- include "tplValues.render" ( dict "value" .Values.global.labels "context" $ ) | nindent 8 }}
+        {{- end }}
+        {{- include "cilium-chaining.selectorLabels" . | nindent 8 }}
+      {{- if .Values.cilium.annotations }}
+      annotations:
+      {{- include "tplValues.render" ( dict "value" .Values.cilium.annotations "context" $ ) | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if .Values.cilium.affinity }}
+      affinity:
+      {{- include "tplValues.render" (dict "value" .Values.cilium.affinity "context" $) | nindent 6 }}
+      {{- else }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    Values:
+                      - linux
+              # Compatible with Kubernetes 1.12.x and 1.13.x
+              - matchExpressions:
+                  - key: beta.kubernetes.io/os
+                    operator: In
+                    Values:
+                      - linux
+      {{- end }}
+      containers:
+      - command:
+        - /bin/init.sh
+        env:
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CILIUM_K8S_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: CILIUM_CNI_CHAINING_MODE
+          value: {{ .Values.cilium.cniChainingMode | quote }}
+        - name: IN_CLUSTER_LOADBALANCE
+          value: {{ .Values.cilium.enableInClusterLoadbalance | quote }}
+        - name: POLICY_ENFORCEMENT
+          value: {{ .Values.cilium.policyEnforcement | quote }}
+        - name: KUBE_PROXY_REPLACEMENT
+          value: {{ .Values.cilium.kubeProxyReplacement | quote }}
+        - name: ENABLE_HUBBLE
+          value: {{ .Values.hubble.enabled | quote }}
+        - name: HUBBLE_LISTEN_ADDRESS
+          value: {{ .Values.hubble.listenAddress | quote }}
+        - name: HUBBLE_LISTEN_ADDRESS
+          value: {{ .Values.hubble.listenAddress | quote }}
+        - name: HUBBLE_METRICS_SERVER
+          value: {{ .Values.hubble.metricsAddress | quote }}
+        - name: HUBBLE_METRICS
+          value: {{ .Values.hubble.metricsAddress | quote }}
+        image: {{ include "cilium-chaining.image" . }}
+        imagePullPolicy: {{ .Values.cilium.image.pullPolicy }}
+        livenessProbe:
+          failureThreshold: 6
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            host: localhost
+            port: 9099
+          timeoutSeconds: 1
+        name: cilium-chaining
+        readinessProbe:
+          failureThreshold: 3
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            host: localhost
+            port: 9099
+          timeoutSeconds: 1
+        {{- with .Values.cilium.resources }}
+        resources:
+        {{- toYaml . | trim | nindent 10 }}
+        {{- end }}
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /opt/cni/bin
+          name: cni-bin
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /host
+          name: host-root
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /etc/cni/net.d
+          name: cni
+          readOnly: true
+        - mountPath: /sys/fs
+          name: sys-fs
+        - mountPath: /var/run/cilium
+          name: cilium-run
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+      hostNetwork: true
+      serviceAccountName: {{ include "cilium-chaining.serviceAccountName" . }}
+      hostPID: true
+      volumes:
+      - hostPath:
+          path: /opt/cni/bin
+          type: Directory
+        name: cni-bin
+      - hostPath:
+          path: /etc/cni/net.d
+          type: ""
+        name: cni
+      - hostPath:
+          path: /var/run/
+          type: Directory
+        name: eni-run
+      - hostPath:
+          path: /lib/modules
+          type: ""
+        name: lib-modules
+      - hostPath:
+          path: /var/lib/cni/networks
+          type: ""
+        name: cni-networks
+      - hostPath:
+          path: /
+          type: Directory
+        name: host-root
+      - name: addon-token
+        secret:
+          defaultMode: 420
+          items:
+          - key: addon.token.config
+            path: token-config
+          optional: true
+          secretName: addon.network.token
+      # cilium
+      - hostPath:
+          path: /var/run/cilium
+          type: DirectoryOrCreate
+        name: cilium-run
+      # cilium
+      - hostPath:
+          path: /sys/fs/
+          type: DirectoryOrCreate
+        name: sys-fs
+      - hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+        name: xtables-lock
