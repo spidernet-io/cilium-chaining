@@ -5,7 +5,7 @@ set -o nounset
 
 formatENV() {
   value=$1
-  echo -e $value | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
+  echo $value | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
 }
 
 kernel_version() {
@@ -27,7 +27,7 @@ kernel_version() {
 copy_cni_bin() {
   rm -f /opt/cni/bin/cilium-cni.old || true
   mv /opt/cni/bin/cilium-cni /opt/cni/bin/cilium-cni.old || true
-  cp -f /bin/cilium-cni /opt/cni/bin
+  cp -f /usr/bin/cilium-cni /opt/cni/bin
 }
 
 start_cilium() {
@@ -42,21 +42,23 @@ start_cilium() {
   # service loadbalance
   enable_in_cluster_loadbalance=$(formatENV $IN_CLUSTER_LOADBALANCE)
   enable_in_cluster_loadbalance=${enable_in_cluster_loadbalance:-false}
+  echo "enable_in_cluster_loadbalance: $enable_in_cluster_loadbalance"
 
-  # policy
   policy_enforcement=$(formatENV $POLICY_ENFORCEMENT)
   if [ -z "$policy_enforcement" ]  ; then
     policy_enforcement=default
   fi
+  echo "policy_enforcement: $policy_enforcement"
 
   # kube-proxy replacement
-  kube_proxy_replacement=${formatENV $KUBE_PROXY_REPLACEMENT}
+  kube_proxy_replacement=$(formatENV $KUBE_PROXY_REPLACEMENT)
   if [ -z "$kube_proxy_replacement" ]; then
     kube_proxy_replacement=partial
   fi
+  echo "kube_proxy_replacement: ${kube_proxy_replacement}"
 
   # cni-chain-mode
-  cni_chain_mode=${formatENV CILIUM_CNI_CHAINING_MODE}
+  cni_chain_mode=$(formatENV $CILIUM_CNI_CHAINING_MODE)
   if [ -z "$cni_chain_mode" ]; then
     cni_chain_mode=spidernet
   fi
@@ -67,26 +69,28 @@ start_cilium() {
     enable_hubble=false
   fi
 
+  hubble_args=""
   if [ "$enable_hubble" = "true" ]; then
-    hubble_args=" --enable-hubble=true --hubble-disable-tls=true "
+    printf "%s %s " "$hubble_args" " --enable-hubble=true  --hubble-disable-tls=true"
   fi
 
   hubble_listen_address=$(formatENV $HUBBLE_LISTEN_ADDRESS)
   if [ -z "$hubble_listen_address" ]; then
     hubble_listen_address=":4244"
   fi
-  hubble_args+=" --hubble-listen-address=${hubble_listen_address} "
+  printf "%s %s " "$hubble_args" " --hubble-listen-address=${hubble_listen_address} "
 
-  hubble_metrics_server=${formatENV $HUBBLE_METRICS_SERVER}
+  hubble_metrics_server=$(formatENV $HUBBLE_METRICS_SERVER)
   if [ -z "$hubble_metrics_server" ]; then
     hubble_metrics_server=":9091"
   fi
-  hubble_args+=" --hubble-metrics-server=${hubble_metrics_server} "
+  printf "%s %s " "$hubble_args" " --hubble-metrics-server=${hubble_metrics_server} "
 
-  hubble_metrics=${formatENV $HUBBLE_METRICS}
+  hubble_metrics=$(formatENV $HUBBLE_METRICS)
   if [ ! -z "$hubble_metrics" ] ; then
-    hubble_args+=" --hubble-metrics=${hubble_metrics} "
+    printf "%s %s \n" "$hubble_args" " --hubble-metrics=${hubble_metrics} "
   fi
+  echo "hubble_options: $hubble_args"
 
   # register crd
   cilium preflight register-crd
@@ -118,6 +122,6 @@ start_cilium() {
 }
 
 kernel_version
-# copy_cni_bin
+copy_cni_bin
 start_cilium
 

@@ -120,13 +120,13 @@ spec:
               - matchExpressions:
                   - key: kubernetes.io/os
                     operator: In
-                    Values:
+                    values:
                       - linux
               # Compatible with Kubernetes 1.12.x and 1.13.x
               - matchExpressions:
                   - key: beta.kubernetes.io/os
                     operator: In
-                    Values:
+                    values:
                       - linux
       containers:
       - command:

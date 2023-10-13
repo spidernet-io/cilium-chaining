@@ -34,5 +34,15 @@ Note:
 You will see cilium-chaining pod is running in your cluster:
 
 ```shell
-kubectl get po -n kube-system 
+kubectl  get po -n kube-system | grep cilium-chaining
+cilium-chaining-24fsl                    1/1     Running     0              55s
+cilium-chaining-hsct6                    1/1     Running     0              54s
+```
+
+## Build
+
+You can use the following command to build test image on your local:
+
+```shell
+make image
 ```
