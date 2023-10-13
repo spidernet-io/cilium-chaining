@@ -159,8 +159,6 @@ spec:
           value: "false"
         - name: HUBBLE_LISTEN_ADDRESS
           value: ":4244"
-        - name: HUBBLE_LISTEN_ADDRESS
-          value: ":4244"
         - name: HUBBLE_METRICS_SERVER
           value: ":9091"
         - name: HUBBLE_METRICS
@@ -201,8 +199,6 @@ spec:
           name: lib-modules
         - mountPath: /host
           name: host-root
-        - mountPath: /lib/modules
-          name: lib-modules
         - mountPath: /etc/cni/net.d
           name: cni
           readOnly: true

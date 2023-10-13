@@ -3,19 +3,19 @@
 set -o errexit
 set -o nounset
 
-func formatENV() {
+formatENV() {
   value=$1
   echo -e $value | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
 }
 
-func kernel_version() {
+kernel_version() {
   # check kernel version
   KERNEL_MAJOR_VERSION=$(uname -r | awk -F . '{print $1}')
   KERNEL_MINOR_VERSION=$(uname -r | awk -F . '{print $2}')
   # kernel version equal and above 4.19
 
-  if [ "$KERNEL_MAJOR_VERSION" -lt 4 ] || { [ "$KERNEL_MAJOR_VERSION" -eq 4 ] && [ "$KERNEL_MINOR_VERSION" -le 19 ]} ; then
-    KERNEL_VERSION=`uname -r`
+  KERNEL_VERSION=`uname -r`
+  if { [ "$KERNEL_MAJOR_VERSION" -eq 4 ] && [ "$KERNEL_MINOR_VERSION" -le 19 ] ; } || [ "$KERNEL_MAJOR_VERSION" -lt 4 ]  ; then
     printf "kernel version: %s is less than 4.19, can't start cilium daemon\n" "$KERNEL_VERSION"
     exit 1
   fi
@@ -24,21 +24,20 @@ func kernel_version() {
 }
 
 
-func copy_cni_bin() {
+copy_cni_bin() {
   rm -f /opt/cni/bin/cilium-cni.old || true
   mv /opt/cni/bin/cilium-cni /opt/cni/bin/cilium-cni.old || true
   cp -f /bin/cilium-cni /opt/cni/bin
 }
 
-func start_cilium() {
+start_cilium() {
 
   nsenter -t 1 -m -- bash -c 'mount | grep "/sys/fs/bpf type bpf" ||
   {
     echo "Mounting BPF filesystem..."
     mount bpffs /sys/fs/bpf -t bpf
+    mount -o remount rw /proc/sys
   }'
-
-  mount -o remount rw /proc/sys
 
   # service loadbalance
   enable_in_cluster_loadbalance=$(formatENV $IN_CLUSTER_LOADBALANCE)
@@ -46,7 +45,7 @@ func start_cilium() {
 
   # policy
   policy_enforcement=$(formatENV $POLICY_ENFORCEMENT)
-  if [ -z "$policy_enforcement" ] || [ ! grep "$policy_enforcement" <<< "default always never" ] ; then
+  if [ -z "$policy_enforcement" ]  ; then
     policy_enforcement=default
   fi
 
@@ -119,6 +118,6 @@ func start_cilium() {
 }
 
 kernel_version
-copy_cni_bin
+# copy_cni_bin
 start_cilium
 

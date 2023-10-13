@@ -79,8 +79,6 @@ spec:
           value: {{ .Values.hubble.enabled | quote }}
         - name: HUBBLE_LISTEN_ADDRESS
           value: {{ .Values.hubble.listenAddress | quote }}
-        - name: HUBBLE_LISTEN_ADDRESS
-          value: {{ .Values.hubble.listenAddress | quote }}
         - name: HUBBLE_METRICS_SERVER
           value: {{ .Values.hubble.metricsAddress | quote }}
         - name: HUBBLE_METRICS
@@ -118,8 +116,6 @@ spec:
           name: lib-modules
         - mountPath: /host
           name: host-root
-        - mountPath: /lib/modules
-          name: lib-modules
         - mountPath: /etc/cni/net.d
           name: cni
           readOnly: true
