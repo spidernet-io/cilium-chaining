@@ -130,7 +130,7 @@ spec:
                       - linux
       containers:
       - command:
-        - /bin/init.sh
+        - ./init.sh
         env:
         - name: NODENAME
           valueFrom:
