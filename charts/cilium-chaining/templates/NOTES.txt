@@ -1,5 +1,0 @@
-You have successfully installed {{ title .Chart.Name }}. your release version is {{ .Chart.Version }}. you can use the following command to see the installation:
-
-```
-    kubectl get po -n {{ .Release.Namespace }}
-```
