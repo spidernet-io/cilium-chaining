@@ -15,15 +15,24 @@ on:
       - main
 
 jobs:
-  call-build-pr:
-    uses:  ./.github/workflows/call-image-build.yaml
-    if: ${{ github.event_name == 'pull_request_target' }}
-    with:
-      ref: ${{ github.ref }}
-      tag: ${{ github.event.pull_request.head.sha }}
-      push: false
-      ci: true
-    secrets: inherit
+  get_ref:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get_ref.outputs.tag }}
+    steps:
+      - name: Get Ref
+        id: get_ref
+        run: |
+          if ${{ github.event_name == 'push' }} ; then
+            echo "trigger by push"
+            echo ::set-output name=tag::${{ github.sha }}
+          elif ${{ github.event_name == 'pull_request' }} ; then
+            echo "trigger by pull_request"
+            echo ::set-output name=tag::${{ github.event.pull_request.head.sha }}
+          else
+            echo "unexpected event: ${{ github.event_name }} "
+            exit 1
+          fi
 
   call-build-main:
     uses:  ./.github/workflows/call-image-build.yaml
@@ -37,7 +46,7 @@ jobs:
 
   call_e2e:
     runs-on: ubuntu-latest
-    needs: [call-build-pr,call-build-main]
+    needs: [get_ref,call-build-image]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
