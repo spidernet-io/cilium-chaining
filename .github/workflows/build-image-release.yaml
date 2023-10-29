@@ -8,11 +8,26 @@ on:
 permissions: write-all
 
 jobs:
+  get_ref:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get_ref.outputs.tag }}
+    steps:
+      - name: Get Ref
+        id: get_ref
+        run: |
+          if ${{ github.event_name != 'push' }} ; then
+            echo "unexpected event: ${{ github.event_name }} "
+            exit 1
+          fi
+          echo "tag=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+
   call-build-release:
+    needs: [get_ref]
     uses: ./.github/workflows/call-image-build.yaml
     with:
       ref: ${{ github.ref }}
-      tag: ${{ github.ref }}
+      tag: ${{ needs.get_ref.outputs.tag }}
       push: true
     secrets: inherit
 
