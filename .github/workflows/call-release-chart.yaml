@@ -13,6 +13,10 @@ on:
         description: 'tag, sha, branch'
         required: true
         default: v1.0.0
+      push:
+        description: 'push chart'
+        required: false
+        default: false
 
 permissions: write-all
 
@@ -23,18 +27,18 @@ jobs:
     permissions:
       contents: write
     steps:
-    steps:
       - name: Get Original Ref
         id: get_original_ref
         run: |
           if ${{ github.event_name == 'workflow_dispatch' }} ; then
               echo "call by workflow_dispatch"
-              ver=${{ inputs.ref }}
-              echo "ref=${ver}" >> $GITHUB_OUTPUT
+              echo "ref=${{ inputs.ref }}" >> $GITHUB_OUTPUT
+              echo "push=${{ inputs.push }}" >> $GITHUB_OUTPUT
           elif ${{ github.event_name == 'push' }} ; then
               echo "call by push"
               ver=${{ github.ref }}
               echo "ref=${ver}" >> $GITHUB_OUTPUT
+              echo "push=true" >> $GITHUB_OUTPUT
           else
               echo "unexpected event: ${{ github.event_name }}"
               exit 1
@@ -76,4 +80,4 @@ jobs:
               --git-repo "$repo" \
               --index-path index.yaml \
               --release-name-template "{{ .Name }}-chart-{{ .Version }}" \
-              --push
+              --push ${{ steps.get_original_ref.outputs.push }}
