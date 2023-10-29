@@ -34,14 +34,14 @@ jobs:
             exit 1
           fi
 
-  call-build-main:
+  call-build-image:
     uses:  ./.github/workflows/call-image-build.yaml
-    if: ${{ github.event_name == 'push' }}
+    needs: [get_ref]
     with:
-     ref: ${{ github.ref }}
-     tag: ${{ github.sha }}
-     push: false
-     ci: true
+      ref: ${{ github.ref }}
+      tag: ${{ needs.get_ref.outputs.tag }}
+      push: false
+      ci: true
     secrets: inherit
 
   call_e2e:
@@ -52,6 +52,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           persist-credentials: false
+          fetch-depth: "0"
           ref: ${{ github.ref }}
 
       - name: Setup Golang
@@ -75,50 +76,21 @@ jobs:
 
       - name: Load Image to docker
         run: |
-          docker load -i .tmp/images.tar
+          docker load -i .tmp/image.tar
           docker images
-
-      # https://github.com/actions/setup-python
-      - name: Set up Python
-        uses: actions/setup-python@v4.7.0
-        with:
-          python-version: 3.8
-          architecture: x64
-
-      # https://github.com/helm/chart-testing-action
-      # Pre-requisites: A GitHub repo containing a directory with your Helm charts (e.g: charts)
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.4.0
-        with:
-          # CT version
-          version: v3.9.0
-
-      - name: Run chart-testing (list-changed)
-        id: list-changed
-        run: |
-          # https://github.com/helm/chart-testing-action/issues/25
-          # if the default branch is not master , the CLI exits with error
-          changed=$( ct list-changed --target-branch ${{ github.ref }}  )
-          if [[ -n "$changed" ]]; then
-            echo "::set-output name=changed::true"
-          fi
-
-      # version checking, YAML schema validation on 'Chart.yaml', YAML linting on 'Chart.yaml'
-      # and 'values.yaml', and maintainer validation
-      - name: Run chart-testing (lint)
-        run: ct lint --debug --target-branch=${{ github.ref }} --check-version-increment=false
 
       # https://github.com/helm/kind-action
       - name: Create Kind cluster
-        if: steps.list-changed.outputs.changed == 'true'
         uses: helm/kind-action@v1.8.0
         with:
           wait: 120s
 
-      #  It automatically detects charts changed
       - name: Run chart-testing (install)
-        if: steps.list-changed.outputs.changed == 'true'
         run: |
-          kind load docker-image ${{ env.ONLINE_REGISTER }}/${{ github.repository }}:${{ github.event.pull_request.head.sha }}
-          ct install --debug --target-branch ${{ github.ref }} --namespace kube-system \
-              --helm-extra-args "--timeout 400s --cilium.image.tag=${{ github.event.pull_request.head.sha }}"
+          kind load docker-image ${{ env.ONLINE_REGISTER }}/${{ github.repository }}:${{ needs.get_ref.outputs.tag }} --name chart-testing
+          helm upgrade --install cilium-chaining -n kube-system charts/cilium-chaining  \
+            --set cilium.image.tag=${{ needs.get_ref.outputs.tag }}
+          sleep 20
+          kubectl get po -n kube-system -o wide
+          kubectl describe po -n kube-system -l app.kubernetes.io/name=cilium-chaining
+          kubectl wait --for=condition=ready -l app.kubernetes.io/name=cilium-chaining --timeout=300s pod -n kube-system

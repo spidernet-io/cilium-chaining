@@ -50,7 +50,7 @@ spec:
       {{- end }}
       containers:
       - command:
-        - /bin/init.sh
+        - ./init.sh
         env:
         - name: NODENAME
           valueFrom:
