@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  cilium-chaining:
+  - apiVersion: v2
+    appVersion: 1.12.7
+    created: "2023-10-29T04:19:04.826528194Z"
+    description: A Helm chart for Kubernetes
+    digest: 043d10d52da6cf42a359a384d28bcba5dbab39a45d86124b16793dc0a28f7653
+    name: cilium-chaining
+    type: application
+    urls:
+    - https://github.com/spidernet-io/cilium-chaining/releases/download/cilium-chaining-chart-1.12.7/cilium-chaining-1.12.7.tgz
+    version: 1.12.7
+generated: "2023-10-29T04:19:04.826537395Z"
