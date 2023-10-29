@@ -26,8 +26,8 @@ jobs:
           if ${{ github.event_name == 'push' }} ; then
             echo "trigger by push"
             echo ::set-output name=tag::${{ github.sha }}
-          elif ${{ github.event_name == 'pull_request_target' }} ; then
-            echo "trigger by pull_request_target"
+          elif ${{ github.event_name == 'pull_request' }} ; then
+            echo "trigger by pull_request"
             echo ::set-output name=tag::${{ github.event.pull_request.head.sha }}
           else
             echo "unexpected event: ${{ github.event_name }} "

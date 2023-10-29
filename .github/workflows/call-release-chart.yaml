@@ -1,0 +1,79 @@
+name: Call Release Charts
+
+env:
+  HELM_VERSION: v3.10.1
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'tag, sha, branch'
+        required: true
+        default: v1.0.0
+
+permissions: write-all
+
+jobs:
+  chart-release:
+    name: Create Chart Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    steps:
+      - name: Get Original Ref
+        id: get_original_ref
+        run: |
+          if ${{ github.event_name == 'workflow_dispatch' }} ; then
+              echo "call by workflow_dispatch"
+              ver=${{ inputs.ref }}
+              echo "ref=${ver}" >> $GITHUB_OUTPUT
+          elif ${{ github.event_name == 'push' }} ; then
+              echo "call by push"
+              ver=${{ github.ref }}
+              echo "ref=${ver}" >> $GITHUB_OUTPUT
+          else
+              echo "unexpected event: ${{ github.event_name }}"
+              exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          # Fetch entire history. Required for chart-releaser; see https://github.com/helm/chart-releaser-action/issues/13#issuecomment-602063896
+          fetch-depth: 0
+          ref: ${{ needs.get_original_ref.outputs.ref }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Chart releaser
+        run: |
+          # Download chart releaser
+          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.4.1/chart-releaser_1.4.1_linux_amd64.tar.gz"
+          tar -xzf cr.tar.gz
+          rm -f cr.tar.gz
+          repo=$(basename "$GITHUB_REPOSITORY")
+          owner=$(dirname "$GITHUB_REPOSITORY")
+          tag="${GITHUB_REF_NAME:1}"
+          echo "Creating release..."
+          # package chart
+          ./cr package charts/cilium-chaining
+          # upload chart to github releases
+          ./cr upload \
+              --owner "$owner" \
+              --git-repo "$repo" \
+              --release-name-template "{{ .Name }}-chart-{{ .Version }}" \
+              --token "${{ secrets.GITHUB_TOKEN }}"
+          # Update index and push to github pages
+          ./cr index \
+              --owner "$owner" \
+              --git-repo "$repo" \
+              --index-path index.yaml \
+              --release-name-template "{{ .Name }}-chart-{{ .Version }}" \
+              --push
