@@ -147,8 +147,6 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        - name: CILIUM_CNI_CHAINING_MODE
-          value: "spidernet"
         - name: IN_CLUSTER_LOADBALANCE
           value: "true"
         - name: POLICY_ENFORCEMENT
@@ -157,12 +155,8 @@ spec:
           value: "partial"
         - name: ENABLE_HUBBLE
           value: "false"
-        - name: HUBBLE_LISTEN_ADDRESS
-          value: ":4244"
-        - name: HUBBLE_METRICS_SERVER
-          value: ":9091"
         - name: HUBBLE_METRICS
-          value: ":9091"
+          value: ""
         image: ghcr.io/spidernet-io/cilium-chaining:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:

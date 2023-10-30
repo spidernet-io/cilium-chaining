@@ -41,9 +41,6 @@ cilium:
   # cilium.kubeProxyReplacement enable only selected features ("partial"), or enable all features ("strict"), or completely disable it (ignores any selected feature) ("disabled") (default "partial")
   kubeProxyReplacement: partial
 
-  # cilium.cniChainingMode configures which CNI plugin Cilium is chained with
-  cniChainingMode: spidernet
-
   # cilium.labels the labels of the cilium-chaining pod
   labels: {}
 
@@ -71,14 +68,8 @@ hubble:
   # hubble.enabled enable hubble
   enabled: false
 
-  # hubble.listenAddress An additional address for Hubble server to listen to
-  listenAddress: ":4244"
-
-  # hubble.metricsAddress Address to serve Hubble metrics on
-  metricsAddress: ":9091"
-
-  # hubble.metricsList List of Hubble metrics to enable, multi metrics separated by common
-  metricsList: ""
+  # hubble.metrics List of Hubble metrics to enable, multi metrics separated by common
+  metrics: ""
 
 serviceAccount:
   # serviceAccount.create create serviceAccount for cilium-chaining pod

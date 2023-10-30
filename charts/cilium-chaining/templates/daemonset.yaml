@@ -67,8 +67,6 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        - name: CILIUM_CNI_CHAINING_MODE
-          value: {{ .Values.cilium.cniChainingMode | quote }}
         - name: IN_CLUSTER_LOADBALANCE
           value: {{ .Values.cilium.enableInClusterLoadbalance | quote }}
         - name: POLICY_ENFORCEMENT
@@ -77,12 +75,8 @@ spec:
           value: {{ .Values.cilium.kubeProxyReplacement | quote }}
         - name: ENABLE_HUBBLE
           value: {{ .Values.hubble.enabled | quote }}
-        - name: HUBBLE_LISTEN_ADDRESS
-          value: {{ .Values.hubble.listenAddress | quote }}
-        - name: HUBBLE_METRICS_SERVER
-          value: {{ .Values.hubble.metricsAddress | quote }}
         - name: HUBBLE_METRICS
-          value: {{ .Values.hubble.metricsAddress | quote }}
+          value: {{ .Values.hubble.metrics | quote }}
         image: {{ include "cilium-chaining.image" . }}
         imagePullPolicy: {{ .Values.cilium.image.pullPolicy }}
         livenessProbe:
