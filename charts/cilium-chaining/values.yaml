@@ -41,6 +41,10 @@ cilium:
   # cilium.kubeProxyReplacement enable only selected features ("partial"), or enable all features ("strict"), or completely disable it (ignores any selected feature) ("disabled") (default "partial")
   kubeProxyReplacement: partial
 
+  # cilium.enableBandwidthManager enable bandwidth manager to optimize TCP and UDP workloads and allow
+  # for rate-limiting traffic from individual Pods with EDT
+  enableBandwidthManager: false
+
   # cilium.labels the labels of the cilium-chaining pod
   labels: {}
 

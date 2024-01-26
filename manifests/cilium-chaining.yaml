@@ -153,6 +153,8 @@ spec:
           value: "default"
         - name: KUBE_PROXY_REPLACEMENT
           value: "partial"
+        - name: ENABLE_BANDWIDTH_MANAGER
+          value: "false"
         - name: ENABLE_HUBBLE
           value: "false"
         - name: HUBBLE_METRICS

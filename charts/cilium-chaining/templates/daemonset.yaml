@@ -73,6 +73,8 @@ spec:
           value: {{ .Values.cilium.policyEnforcement | quote }}
         - name: KUBE_PROXY_REPLACEMENT
           value: {{ .Values.cilium.kubeProxyReplacement | quote }}
+        - name: ENABLE_BANDWIDTH_MANAGER
+          value: {{ .Values.cilium.enableBandwidthManager | quote }}
         - name: ENABLE_HUBBLE
           value: {{ .Values.hubble.enabled | quote }}
         - name: HUBBLE_METRICS

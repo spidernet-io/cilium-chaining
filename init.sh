@@ -4,12 +4,13 @@ set -o errexit
 set -o nounset
 
 ENABLE_HUBBLE=${ENABLE_HUBBLE:-false}
+ENABLE_BANDWIDTH_MANAGER=${ENABLE_BANDWIDTH_MANAGER:-false}
 HUBBLE_METRICS_SERVER=${HUBBLE_METRICS_SERVER:-9091}
 HUBBLE_LISTEN_ADDRESS=${HUBBLE_LISTEN_ADDRESS:-4244}
 
 formatENV() {
   value=$1
-  echo $value | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
+  echo ${value} | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
 }
 
 kernel_version() {
@@ -18,7 +19,7 @@ kernel_version() {
   KERNEL_MINOR_VERSION=$(uname -r | awk -F . '{print $2}')
   # kernel version equal and above 4.19
 
-  KERNEL_VERSION=`uname -r`
+  KERNEL_VERSION=$(uname -r)
   if { [ "$KERNEL_MAJOR_VERSION" -eq 4 ] && [ "$KERNEL_MINOR_VERSION" -le 19 ] ; } || [ "$KERNEL_MAJOR_VERSION" -lt 4 ]  ; then
     printf "kernel version: %s is less than 4.19, can't start cilium daemon\n" "$KERNEL_VERSION"
     exit 1
@@ -48,6 +49,7 @@ start_cilium() {
   policy_enforcement=default
   kube_proxy_replacement=partial
   enable_hubble=false
+  enable_bandwidth_manager=false
 
   # service loadbalance
   if [ -n "$IN_CLUSTER_LOADBALANCE" ]; then
@@ -65,6 +67,11 @@ start_cilium() {
     kube_proxy_replacement=$(formatENV $KUBE_PROXY_REPLACEMENT)
   fi
   echo "kube_proxy_replacement: ${kube_proxy_replacement}"
+
+  # bandwidth manager
+  if [ -n "$ENABLE_BANDWIDTH_MANAGER" ]; then
+    enable_bandwidth_manager=$(formatENV $ENABLE_BANDWIDTH_MANAGER)
+  fi
 
   # hubble
   if [ "$ENABLE_HUBBLE" = "true" ]; then
@@ -97,6 +104,7 @@ start_cilium() {
     --install-iptables-rules=false \
     --enable-l7-proxy=false \
     --ipam=cluster-pool  \
+    --enable-bandwidth-manager=${enable_bandwidth_manager} \ 
     --enable-policy=${policy_enforcement}  \
     --enable-in-cluster-loadbalance=${enable_in_cluster_loadbalance} \
     --kube-proxy-replacement=${kube_proxy_replacement} \
