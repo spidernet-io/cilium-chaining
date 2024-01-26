@@ -1,12 +1,11 @@
 # Cilium-chaining
 
-Cilium-chaining is a project based on [cilium](https://github.com/cilium/cilium), It runs in cni-chaining-mode and works primarily with IPvlan. It can provide some the following capabilities:
+Cilium-chaining is a project based on [cilium](https://github.com/cilium/cilium), It runs in cni-chaining-mode and works primarily with IPvlan. It can provide some the following capabilities for [Spiderpool](https://github.com/spidernet-io/spiderpool):
 
 - Kubernetes network policy
 - Observability
 - Kube-proxy replacement
-- Accelerated access to the Service
-- ...
+- Bandwidth
 
 This project is inspired by [terway](https://github.com/AliyunContainerService/terway), Thanks for the great works 👍.
 
