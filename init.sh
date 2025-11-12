@@ -50,6 +50,7 @@ start_cilium() {
   kube_proxy_replacement=partial
   enable_hubble=false
   enable_bandwidth_manager=false
+  agent_health_port=9100
 
   # service loadbalance
   if [ -n "$IN_CLUSTER_LOADBALANCE" ]; then
@@ -83,6 +84,11 @@ start_cilium() {
     hubble_metrics_arg="--hubble-metrics=${HUBBLE_METRICS}"
   fi
 
+  if [ -n "$AGENT_HEALTH_PORT" ]; then
+    agent_health_port=$(formatENV $AGENT_HEALTH_PORT)
+  fi
+  echo "agent_health_port: ${agent_health_port}"
+
   # register crd
   cilium preflight register-crd
 
@@ -90,7 +96,6 @@ start_cilium() {
   cilium-agent --tunnel=disabled \
     --enable-ipv4-masquerade=false \
     --enable-ipv6-masquerade=false \
-    --agent-health-port=9099 \
     --disable-envoy-version-check=true \
     --enable-local-node-route=false \
     --ipv4-range=169.254.10.0/30 \
@@ -110,6 +115,7 @@ start_cilium() {
     --kube-proxy-replacement=${kube_proxy_replacement} \
     --hubble-metrics-server=${HUBBLE_METRICS_SERVER} \
     --hubble-listen-address=${HUBBLE_LISTEN_ADDRESS} \
+    --agent-health-port=${AGENT_HEALTH_PORT} \
     ${enable_hubble_arg} ${hubble_metrics_arg}
 }
 

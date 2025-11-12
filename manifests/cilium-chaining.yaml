@@ -159,6 +159,8 @@ spec:
           value: "false"
         - name: HUBBLE_METRICS
           value: ""
+        - name: AGENT_HEALTH_PORT
+          value: "9100"
         image: ghcr.io/spidernet-io/cilium-chaining:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:

@@ -79,6 +79,8 @@ spec:
           value: {{ .Values.hubble.enabled | quote }}
         - name: HUBBLE_METRICS
           value: {{ .Values.hubble.metrics | quote }}
+        - name: AGENT_HEALTH_PORT
+          value: {{ .Values.cilium.agentHealthPort | quote }}
         image: {{ include "cilium-chaining.image" . }}
         imagePullPolicy: {{ .Values.cilium.image.pullPolicy }}
         livenessProbe:

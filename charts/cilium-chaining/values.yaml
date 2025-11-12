@@ -45,6 +45,9 @@ cilium:
   # for rate-limiting traffic from individual Pods with EDT
   enableBandwidthManager: false
 
+  # cilium.agentHealthPort the agent health port of the cilium-chaining pod
+  agentHealthPort: 9100
+
   # cilium.labels the labels of the cilium-chaining pod
   labels: {}
 
