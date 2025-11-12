@@ -49,7 +49,7 @@ jobs:
     needs: [get_ref,call-build-image]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: "0"
@@ -69,7 +69,7 @@ jobs:
           version: ${{ env.HELM_VERSION }}
 
       - name: Download ci image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v6
         with:
           name: image-e2e-tar
           path: .tmp
