@@ -91,7 +91,7 @@ spec:
           successThreshold: 1
           tcpSocket:
             host: localhost
-            port: 9099
+            port: {{ .Values.cilium.agentHealthPort }}
           timeoutSeconds: 1
         name: cilium-chaining
         readinessProbe:
@@ -100,7 +100,7 @@ spec:
           successThreshold: 1
           tcpSocket:
             host: localhost
-            port: 9099
+            port: {{ .Values.cilium.agentHealthPort }}
           timeoutSeconds: 1
         {{- with .Values.cilium.resources }}
         resources:
