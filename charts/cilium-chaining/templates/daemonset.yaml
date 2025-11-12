@@ -133,7 +133,10 @@ spec:
       - name: init-scripts
         configMap:
           name: {{ include "cilium-chaining.name" . }}-init
-          defaultMode: 0755
+          items:
+            - key: init.sh
+              path: init.sh
+          defaultMode: 511
       - hostPath:
           path: /opt/cni/bin
           type: Directory

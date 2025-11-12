@@ -266,7 +266,7 @@ spec:
                       - linux
       containers:
       - command:
-        - ./init.sh
+        - ./scripts/init.sh
         env:
         - name: NODENAME
           valueFrom:
@@ -342,6 +342,8 @@ spec:
           name: cilium-run
         - mountPath: /run/xtables.lock
           name: xtables-lock
+        - mountPath: /scripts
+          name: init-scripts
       hostNetwork: true
       serviceAccountName: cilium-chaining
       hostPID: true
@@ -370,6 +372,13 @@ spec:
           path: /
           type: Directory
         name: host-root
+      - name: init-scripts
+        configMap:
+          name: cilium-chaining-init
+          items:
+            - key: init.sh
+              path: init.sh
+          defaultMode: 511
       - name: addon-token
         secret:
           defaultMode: 420

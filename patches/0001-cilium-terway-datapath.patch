@@ -431,7 +431,7 @@ index 0000000000..d85bba9285
 +)
 +
 +var (
-+	name = "terway-chainer"
++	name = "spidernet-chainer"
 +	log  = logging.DefaultLogger.WithField(logfields.LogSubsys, name)
 +)
 +
