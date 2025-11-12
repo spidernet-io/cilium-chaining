@@ -52,5 +52,4 @@ COPY --from=iproute2-dist /usr/local /usr/local
 COPY --from=iproute2-dist /usr/lib/libbpf* /usr/lib/
 COPY --from=iptables-dist /iptables /iptables
 COPY --from=cilium-builder /tmp/install/ /
-COPY init.sh /
 RUN dpkg -i /iptables/*\.deb && rm -rf /iptables

@@ -50,7 +50,8 @@ spec:
       {{- end }}
       containers:
       - command:
-        - ./init.sh
+        - sh
+        - /scripts/init.sh
         env:
         - name: NODENAME
           valueFrom:
@@ -108,6 +109,8 @@ spec:
         securityContext:
           privileged: true
         volumeMounts:
+        - mountPath: /scripts
+          name: init-scripts
         - mountPath: /opt/cni/bin
           name: cni-bin
         - mountPath: /lib/modules
@@ -127,6 +130,10 @@ spec:
       serviceAccountName: {{ include "cilium-chaining.serviceAccountName" . }}
       hostPID: true
       volumes:
+      - name: init-scripts
+        configMap:
+          name: {{ include "cilium-chaining.name" . }}-init
+          defaultMode: 0755
       - hostPath:
           path: /opt/cni/bin
           type: Directory
